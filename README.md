@@ -30,6 +30,11 @@ All source code, model weights, and deployment instructions will be **progressiv
 
 The scope and sequence of these releases may evolve, but the intent is to make the most reusable parts of the system publicly available so others can adapt the workflow to their own vessels, species, and regulations.
 
+## License
+
+Subject to any terms and conditions required for pre-existing code (including AGPL-3.0), The Nature Conservancy releases this code for the advancement of ocean conservation and its mission to conserve the lands and waters on which all life depends, and The Nature Conservancy reserves all rights to its name and marks.
+
+See the `LICENSE` file for a full license text.
 
 ## 📦 Released components
 
