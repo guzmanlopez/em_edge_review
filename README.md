@@ -40,7 +40,7 @@ See the `LICENSE` file for a full license text.
 
 ### `cvat/` – Annotation platform setup
 
-This folder contains instructions and scripts for installing [CVAT](https://cvat.org/), an open-source platform for video and image annotation. In this pilot project, CVAT was used to annotate EM footage for training the fish detector model.
+This folder contains instructions and scripts for installing [CVAT](https://www.cvat.ai/), an open-source platform for video and image annotation. In this pilot project, CVAT was used to annotate EM footage for training the fish detector model.
 
 > 📘 See `cvat/README.md` for installation and usage instructions
 
