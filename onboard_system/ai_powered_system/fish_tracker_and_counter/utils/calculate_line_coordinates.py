@@ -1,5 +1,3 @@
-from typing import List, Tuple
-
 import cv2
 
 from logger import get_logger
@@ -7,7 +5,7 @@ from logger import get_logger
 logger = get_logger(__name__)
 
 
-def get_video_resolution(video_file: str) -> Tuple[int, int, float]:
+def get_video_resolution(video_file: str) -> tuple[int, int, float]:
     """Get resolution and FPS of a local video file.
 
     Args:
@@ -29,7 +27,7 @@ def get_video_resolution(video_file: str) -> Tuple[int, int, float]:
     return width, height, fps
 
 
-def calculate_coordinates(height: int, width: int) -> List[Tuple[int, int]]:
+def calculate_coordinates(height: int, width: int) -> list[tuple[int, int]]:
     """Calculate the coordinates for a line based on the video dimensions.
 
     Args:

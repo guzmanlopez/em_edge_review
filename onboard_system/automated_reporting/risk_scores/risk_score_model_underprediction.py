@@ -23,7 +23,7 @@ UNDER_RATIO_HIGH = settings.MODEL_UNDERPREDICTION_UNDER_RATIO_HIGH_PERCENT / 100
 logger = get_logger(__name__)
 
 
-def calculate_risk_score_model_underprediction(  # noqa: PLR0912
+def calculate_risk_score_model_underprediction(
     risk_score_elogs: dict,
     video_list: list,
     processed_video_list: list,

@@ -2,7 +2,7 @@ import base64
 import os
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import pandas as pd
 import pytz
@@ -66,7 +66,7 @@ def display_event_type(evt: str) -> str:
     return EVENT_TYPE_DISPLAY.get(evt, evt)
 
 
-def extract_evidence_frames(catch_sequence: List[Dict], output_dir: str) -> None:
+def extract_evidence_frames(catch_sequence: list[dict], output_dir: str) -> None:
     """Placeholder: implement in your environment-specific layer.
 
     This function should extract evidence frames for the given catch sequence and save them to the output directory.
@@ -144,8 +144,8 @@ def load_html_template(template_path: str) -> Template:
 
 
 def load_report_inputs(
-    use_dummy_data: bool,  # noqa: FBT001
-) -> Tuple[List[str], List[str], pd.DataFrame, List[str]]:
+    use_dummy_data: bool,
+) -> tuple[list[str], list[str], pd.DataFrame, list[str]]:
     """Load per-day inputs required to compute the report and risk scores.
 
     Depending on `use_dummy_data`, this loads:
@@ -175,15 +175,15 @@ def load_report_inputs(
 
 
 def compute_report_artifacts(
-    catch_sequence: List[Dict],
-    counts_by_species: List[Dict],
+    catch_sequence: list[dict],
+    counts_by_species: list[dict],
     report_path: str,
-    use_dummy_data: bool,  # noqa: FBT001
-    video_list: List[str],
-    gps_list: List[str],
+    use_dummy_data: bool,
+    video_list: list[str],
+    gps_list: list[str],
     elog_catch_df: pd.DataFrame,
-    processed_video_list: List[str],
-) -> Dict[str, Any]:
+    processed_video_list: list[str],
+) -> dict[str, Any]:
     """Compute map HTML and all risk scores, then aggregate them.
 
     This runs the full pipeline of “derived outputs” used in the report:
@@ -264,8 +264,8 @@ def compute_report_artifacts(
 
 
 def map_events(
-    catch_sequence: List[Dict], discarded_matching_thresh: int = DISCARDED_MATCHING_THRESH
-) -> List[Dict]:
+    catch_sequence: list[dict], discarded_matching_thresh: int = DISCARDED_MATCHING_THRESH
+) -> list[dict]:
     """Map catch events to RETAINED, VESSEL_DISCARD, or WATER_DISCARD based on proximity in frames.
 
     - DISCARD events are mapped to WATER_DISCARD
@@ -279,7 +279,7 @@ def map_events(
     Returns:
         list[dict]: The mapped catch events.
     """
-    mapped_events: List[Dict] = []
+    mapped_events: list[dict] = []
     event_index = 0
 
     while event_index < len(catch_sequence):

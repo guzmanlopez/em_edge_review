@@ -1,26 +1,72 @@
 [project]
 name = "em-edge-review"
-version = "0.1.1"
+version = "0.1.2"
 description = "Monitoring fishing activity on the edge: Mobilizing AI and edge technologies to advance near real-time electronic monitoring footage review"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 dependencies = [
     "lapx>=0.5.12",
     "mlflow>=3.2.0",
     "python-dotenv>=1.1.1",
     "shapely>=2.1.1",
-    "ultralytics==8.3.23",
+    "ultralytics>=8.4.128",
     "folium>=0.14.0",
     "geopandas>=0.14.0",
-    "torch==2.3.1",
-    "torchvision==0.18.1",
+    "torch>=2.13.0",
+    "torchvision>=0.28.0",
 ]
 
-[tool.uv.sources]
-torch = { index = "pytorch" }
-torchvision = { index = "pytorch" }
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
 
-[[tool.uv.index]]
-name = "pytorch"
-url = "https://download.pytorch.org/whl/cpu"
-explicit = true
+[tool.setuptools.packages.find]
+include = ["src*"]
+
+[dependency-groups]
+dev = [
+    "complexipy>=7.0.1",
+    "detect-secrets>=1.5.0",
+    "docstr-coverage>=2.3.2",
+    "ipykernel>=7.3.0",
+    "pre-commit>=4.6.0",
+    "pyarrow>=25.0.0",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.16.3",
+    "ty>=0.0.71",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.format]
+preview = true
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+markers = [
+    "integration: exercises local model weights and GPU-backed pipeline stages",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.complexipy]
+paths = ["onboard_system", "fish_detector_model", "logger.py"]
+max-complexity-allowed = 20
+snapshot-create = false
+snapshot-ignore = false
+quiet = false
+ignore-complexity = false
+failed = false
+color = "auto"
+sort = "asc"
+exclude = []
+output-csv = false
+output-json = false
+
+[[tool.mypy.overrides]]
+module = "polars.utils.udfs"
+ignore_missing_imports = true

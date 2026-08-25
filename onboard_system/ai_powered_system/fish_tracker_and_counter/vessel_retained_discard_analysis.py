@@ -85,7 +85,7 @@ def count_fish_in_video(
     video_file: str,
     counter: CustomObjectCounter,
     output_video_folder: str,
-    write_results_video: bool,  # noqa: FBT001
+    write_results_video: bool,
 ) -> None:
     """Process a single video file for fish counting.
 
@@ -112,7 +112,10 @@ def count_fish_in_video(
         )
         logger.info(f"Saving video to: {output_video_path}")
         video_writer = cv2.VideoWriter(
-            output_video_path, cv2.VideoWriter_fourcc(*"mp4v"), fps, (frame_width, frame_height)
+            output_video_path,
+            getattr(cv2, "VideoWriter_fourcc")(*"mp4v"),
+            fps,
+            (frame_width, frame_height),
         )
     else:
         video_writer = None
@@ -140,8 +143,6 @@ def count_fish_in_video(
 
     if write_results_video and video_writer:
         video_writer.release()
-
-    return None
 
 
 def main() -> None:

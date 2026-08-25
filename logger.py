@@ -3,26 +3,25 @@
 import logging
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Optional
 
 LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
 
-UTC = timezone.utc
+UTC = UTC
 formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(formatter)
 handler.setLevel(LEVEL)
 
 
-def _is_interactive():  # noqa: ANN202
+def _is_interactive():
     import __main__ as main
 
     return not hasattr(main, "__file__")
 
 
-def get_logger(file_path: str, level: Optional[str] = None) -> logging.Logger:
+def get_logger(file_path: str, level: str | None = None) -> logging.Logger:
     if level is None:
         level = LEVEL
     name = Path(file_path).stem

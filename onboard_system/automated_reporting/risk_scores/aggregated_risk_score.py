@@ -1,5 +1,3 @@
-from typing import Optional
-
 from onboard_system.automated_reporting import settings
 
 AGGREGATED_SCORE_MIN = settings.AGGREGATED_SCORE_MIN
@@ -14,7 +12,7 @@ def calculate_aggregated_risk_score(
     risk_score_elogs: dict,
     risk_score_model_underprediction: dict,
     risk_score_operational: dict,
-) -> Optional[float]:
+) -> float | None:
     """Compute an aggregated risk score normalized to [SCORE_MIN, SCORE_MAX].
 
     Each input dict must contain a numeric `"risk_score"`.
@@ -32,14 +30,17 @@ def calculate_aggregated_risk_score(
         "operational": risk_score_operational.get("risk_score"),
     }
 
-    if any(v is None for v in scores.values()):
+    numeric_scores: dict[str, int | float] = {
+        key: value for key, value in scores.items() if isinstance(value, int | float)
+    }
+    if len(numeric_scores) != len(scores):
         return None
 
     weights = AGGREGATED_RISK_WEIGHTS
     min_weighted = sum(AGGREGATED_SCORE_MIN * weights[k] for k in scores)
     max_weighted = sum(AGGREGATED_SCORE_MAX * weights[k] for k in scores)
 
-    raw_weighted = sum(float(scores[k]) * weights[k] for k in scores)
+    raw_weighted = sum(float(score) * weights[key] for key, score in numeric_scores.items())
 
     denom = max_weighted - min_weighted
     if denom == 0:

@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 from pathlib import Path
+from typing import Any, cast
 
 import folium
 import geopandas as gpd
@@ -26,6 +27,7 @@ MPA_PATH = settings.MPA_PATH
 COAST_BUFFER_PATH = settings.COAST_BUFFER_PATH
 
 logger = get_logger(__name__)
+
 
 def _load_gps_data_from_db() -> pd.DataFrame:
     """Placeholder: implement in your environment-specific layer."""
@@ -67,7 +69,7 @@ def _find_nearest_gps(catch_time: datetime, gps_df: pd.DataFrame) -> dict:
 
 def get_gps_data(
     catch_sequence: list,
-    use_dummy_data: bool = False,  # noqa: FBT001, FBT002
+    use_dummy_data: bool = False,
 ) -> list:
     """Match GPS data with catch times and return a list of dictionaries containing the matched data.
 
@@ -93,33 +95,31 @@ def get_gps_data(
     for catch in catch_sequence:
         gps_info = _find_nearest_gps(catch_time=catch["estimated_catch_time"], gps_df=gps_df)
         label = catch["label"]
-        catches_with_gps.append(
-            {
-                "label": label,
-                "scientific_name": FISH_MAPPING.get(label, {}).get("scientific_name", "Unknown"),
-                "name_en": FISH_MAPPING.get(label, {}).get("name_en", "Unknown"),
-                "name_es": FISH_MAPPING.get(label, {}).get("name_es", "Unknown"),
-                "illegal": bool(label in ILLEGAL_SPECIES),
-                "event_type": catch["event_type"],
-                "estimated_catch_time": catch["estimated_catch_time"],
-                "lat": gps_info["lat"],
-                "lon": gps_info["lon"],
-                "gps_time": gps_info["gps_datetime"],
-                "outside_mpa": gps_info["outside_mpa"],
-                "in_eez": gps_info["in_eez"],
-                "outside_coast_buffer": gps_info["outside_coast_buffer"],
-                "dist_to_mpa_km": gps_info["dist_to_mpa_km"],
-                "dist_to_eez_km": gps_info["dist_to_eez_km"],
-                "dist_to_coast_buffer_km": gps_info["dist_to_coast_buffer_km"],
-                "confidence": gps_info["confidence"],
-            }
-        )
+        catches_with_gps.append({
+            "label": label,
+            "scientific_name": FISH_MAPPING.get(label, {}).get("scientific_name", "Unknown"),
+            "name_en": FISH_MAPPING.get(label, {}).get("name_en", "Unknown"),
+            "name_es": FISH_MAPPING.get(label, {}).get("name_es", "Unknown"),
+            "illegal": bool(label in ILLEGAL_SPECIES),
+            "event_type": catch["event_type"],
+            "estimated_catch_time": catch["estimated_catch_time"],
+            "lat": gps_info["lat"],
+            "lon": gps_info["lon"],
+            "gps_time": gps_info["gps_datetime"],
+            "outside_mpa": gps_info["outside_mpa"],
+            "in_eez": gps_info["in_eez"],
+            "outside_coast_buffer": gps_info["outside_coast_buffer"],
+            "dist_to_mpa_km": gps_info["dist_to_mpa_km"],
+            "dist_to_eez_km": gps_info["dist_to_eez_km"],
+            "dist_to_coast_buffer_km": gps_info["dist_to_coast_buffer_km"],
+            "confidence": gps_info["confidence"],
+        })
     logger.info(f"Matched GPS data for {len(catches_with_gps)} catch events.")
 
     return catches_with_gps
 
 
-def generate_map(catches_with_gps: list) -> str:  # noqa: PLR0915
+def generate_map(catches_with_gps: list) -> str:
     """Generates an interactive map with markers for each catch event and saves it to an HTML file.
 
     Args:
@@ -173,7 +173,7 @@ def generate_map(catches_with_gps: list) -> str:  # noqa: PLR0915
         folium.GeoJson(
             eez_data,
             name="EEZ",
-            style_function=lambda feature: {  # noqa: ARG005
+            style_function=lambda feature: {
                 "fillColor": "green",
                 "color": "green",
                 "weight": 2,
@@ -181,7 +181,7 @@ def generate_map(catches_with_gps: list) -> str:  # noqa: PLR0915
             },
         ).add_to(m)
         logger.info("Added EEZ layer")
-    except Exception:  # noqa: BLE001
+    except Exception:
         logger.exception("Failed to add EEZ layer")
 
     try:
@@ -191,7 +191,7 @@ def generate_map(catches_with_gps: list) -> str:  # noqa: PLR0915
         folium.GeoJson(
             mpa_data,
             name="MPA",
-            style_function=lambda feature: {  # noqa: ARG005
+            style_function=lambda feature: {
                 "fillColor": "red",
                 "color": "red",
                 "weight": 2,
@@ -199,7 +199,7 @@ def generate_map(catches_with_gps: list) -> str:  # noqa: PLR0915
             },
         ).add_to(m)
         logger.info("Added MPA layer")
-    except Exception:  # noqa: BLE001
+    except Exception:
         logger.exception("Failed to add MPA layer")
 
     try:
@@ -209,13 +209,13 @@ def generate_map(catches_with_gps: list) -> str:  # noqa: PLR0915
         folium.GeoJson(
             coast_buffer_data,
             name="Coastline buffer",
-            style_function=lambda feature: {  # noqa: ARG005
+            style_function=lambda feature: {
                 "color": "red",
                 "weight": 2,
             },
         ).add_to(m)
         logger.info("Added coastline buffer layer")
-    except Exception:  # noqa: BLE001
+    except Exception:
         logger.exception("Failed to add coastline buffer layer")
 
     folium.LayerControl().add_to(m)
@@ -284,7 +284,7 @@ def generate_map(catches_with_gps: list) -> str:  # noqa: PLR0915
                     max_width=300,
                 ),
                 tooltip=f"{catch['name_en']} {catch['event_type']} catch at {catch['estimated_catch_time'].strftime('%d/%b %H:%M')}",
-                icon=custom_icon,
+                icon=cast(Any, custom_icon),
             ).add_to(m)
 
     legend_html = f"""
@@ -322,7 +322,7 @@ def generate_map(catches_with_gps: list) -> str:  # noqa: PLR0915
         </span>
     </div>
     """
-    m.get_root().html.add_child(folium.Element(legend_html))
+    cast(Any, m.get_root()).html.add_child(folium.Element(legend_html))
 
     logger.info("Generated map with catch markers.")
 
@@ -374,18 +374,16 @@ def get_gps_risk_features(gps_df: pd.DataFrame) -> pd.DataFrame:
 
     # Calculate distance (in km) from each point to the boundary of each zone
     gps_df["dist_to_eez_km"] = gps_gdf.geometry.apply(
-        lambda point: 0
-        if point.within(eez_union)
-        else point.distance(eez_union.boundary) / 1000
+        lambda point: 0 if point.within(eez_union) else point.distance(eez_union.boundary) / 1000
     )
     gps_df["dist_to_mpa_km"] = gps_gdf.geometry.apply(
-        lambda point: 0
-        if point.within(mpa_union)
-        else point.distance(mpa_union.boundary) / 1000
+        lambda point: 0 if point.within(mpa_union) else point.distance(mpa_union.boundary) / 1000
     )
     gps_df["dist_to_coast_buffer_km"] = gps_gdf.geometry.apply(
-        lambda point: 0
-        if point.within(coast_buffer_union)
-        else point.distance(coast_buffer_union.boundary) / 1000
+        lambda point: (
+            0
+            if point.within(coast_buffer_union)
+            else point.distance(coast_buffer_union.boundary) / 1000
+        )
     )
     return gps_df

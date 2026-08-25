@@ -48,13 +48,14 @@ def main() -> None:
         tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
         if not tracking_uri:
             logger.error("MLFLOW_TRACKING_URI is not set in environment variables.")
-        settings.update({"mlflow": True})
-        mlflow.set_tracking_uri(tracking_uri)
+        else:
+            settings.update({"mlflow": True})
+            mlflow.set_tracking_uri(tracking_uri)
     else:
         settings.update({"mlflow": False})
 
     model = YOLO(cfg["model"])
-    
+
     cfg.pop("model")
     cfg["data"] = args.data
     cfg["name"] = datetime.now().strftime("date_%Y%m%d_%H%M%S")

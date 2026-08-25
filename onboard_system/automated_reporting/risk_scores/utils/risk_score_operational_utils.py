@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from typing import List, Optional
 
 from logger import get_logger
 from onboard_system.automated_reporting import settings
@@ -11,26 +10,26 @@ EXPECTED_RECORD_INTERVAL = settings.EXPECTED_RECORD_INTERVAL
 logger = get_logger(__name__)
 
 
-def get_todays_videos_from_server() -> List[str]:
+def get_todays_videos_from_server() -> list[str]:
     """Placeholder: implement in your environment-specific layer."""
     msg = "Provide get_todays_videos_from_server() in your project."
     raise NotImplementedError(msg)
 
 
-def get_gps_records_from_server() -> List[str]:
+def get_gps_records_from_server() -> list[str]:
     """Placeholder: implement in your environment-specific layer."""
     msg = "Provide get_gps_records_from_server() in your project."
     raise NotImplementedError(msg)
 
 
-def extract_timestamp_from_video_filename(filename: str) -> Optional[datetime]:
+def extract_timestamp_from_video_filename(filename: str) -> datetime | None:
     """Extract timestamp from a video filename.
 
     Expected format:
         {boatname}_{camera_id}_{YYYYMMDD}-{HHMMSS}_{resolution}.mp4
     """
     parts = filename.split("_")
-    if len(parts) < 3:  # noqa: PLR2004
+    if len(parts) < 3:
         return None
 
     try:
@@ -40,14 +39,14 @@ def extract_timestamp_from_video_filename(filename: str) -> Optional[datetime]:
         return None
 
 
-def extract_timestamp_from_gps_filename(filename: str) -> Optional[datetime]:
+def extract_timestamp_from_gps_filename(filename: str) -> datetime | None:
     """Extract timestamp from a GPS filename.
 
     Expected format:
         {boatname}_{YYYYMMDD}_{HHMM}.csv
     """
     parts = filename.split("_")
-    if len(parts) != 3:  # noqa: PLR2004
+    if len(parts) != 3:
         return None
 
     try:
@@ -100,7 +99,7 @@ def find_gaps_in_list(data_list: list, data_source: str = "video") -> list[timed
     return time_gaps
 
 
-def calculate_total_footage_time(video_list: List[str]) -> timedelta:
+def calculate_total_footage_time(video_list: list[str]) -> timedelta:
     """Estimate the total recorded footage duration from video filenames.
 
     Extracts timestamps from video filenames and sums time differences between
@@ -135,7 +134,7 @@ def calculate_total_footage_time(video_list: List[str]) -> timedelta:
     return total_time
 
 
-def calculate_total_gps_records_time(gps_list: List[str]) -> timedelta:
+def calculate_total_gps_records_time(gps_list: list[str]) -> timedelta:
     """Estimate the total duration covered by GPS records based on filenames.
 
     Extracts timestamps from GPS filenames and sums time differences between

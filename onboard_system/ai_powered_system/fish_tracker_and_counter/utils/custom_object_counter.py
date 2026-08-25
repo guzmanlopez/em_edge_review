@@ -19,11 +19,10 @@ Original Ultralytics code is licensed under AGPL-3.0.
 For full license details, see: https://www.gnu.org/licenses/agpl-3.0.html
 """
 
-
 import json
 import os
 from collections import Counter, defaultdict
-from typing import Dict, List, Optional, Tuple
+from typing import Any, cast
 
 import numpy as np
 from ultralytics.solutions import ObjectCounter as BaseObjectCounter
@@ -35,6 +34,7 @@ DISAPPEARANCE_THRESHOLD = 30  # Allow up to 30 frames of disappearance before fi
 MIN_TRACK_LENGTH_THRESHOLD = 1 * 12  # Minimum number of frames to consider a track for counting
 DEFERRED_COUNTING_THRESHOLD = 30 * 12  # Number of frames to wait before finalizing counts
 
+
 class CustomObjectCounter(BaseObjectCounter):
     """CustomObjectCounter extends BaseObjectCounter to implement specific IN and OUT counting logic.
 
@@ -44,7 +44,7 @@ class CustomObjectCounter(BaseObjectCounter):
     finalizing the count and assigning the most frequent label across its tracking history.
     """
 
-    def __init__(self, output_json_folder: str, **kwargs) -> None:  # noqa: ANN003
+    def __init__(self, output_json_folder: str, **kwargs) -> None:
         """Initializes the CustomObjectCounter.
 
         Args:
@@ -70,7 +70,7 @@ class CustomObjectCounter(BaseObjectCounter):
         self.tracking_data = []
         self.id_offset = 0
 
-    def count(self, im0: np.ndarray) -> np.ndarray:  # noqa: ANN101
+    def count(self, im0: np.ndarray) -> np.ndarray:
         """Overrides the count method in BaseObjectCounter to process a video frame for object detection, tracking, and counting.
 
         Enhancements include:
@@ -92,8 +92,10 @@ class CustomObjectCounter(BaseObjectCounter):
 
         self.annotator = Annotator(im=im0, line_width=self.line_width)
         self.extract_tracks(im0=im0)
+        annotator = cast(Any, self.annotator)
+        counter = cast(Any, self)
 
-        self.annotator.draw_region(
+        annotator.draw_region(
             reg_pts=self.region, color=(104, 0, 123), thickness=self.line_width * 2
         )
 
@@ -105,10 +107,10 @@ class CustomObjectCounter(BaseObjectCounter):
             # Draw bounding box and counting region
             self.annotator.box_label(box=box, label=label, color=colors(cls, True))
             self.store_extended_tracking_history(track_id=track_id, box=box, cls=cls, conf=conf)
-            self.store_classwise_counts(cls=cls)
+            counter.store_classwise_counts(cls=cls)
 
             # Draw tracks of objects
-            self.annotator.draw_centroid_and_tracks(
+            annotator.draw_centroid_and_tracks(
                 track=self.track_line, color=colors(int(cls), True), track_thickness=self.line_width
             )
 
@@ -141,8 +143,8 @@ class CustomObjectCounter(BaseObjectCounter):
 
         self.verify_and_finalize_counts()
 
-        self.display_counts(im0=im0)
-        self.display_output(im0=im0)
+        counter.display_counts(plot_im=im0)
+        counter.display_output(plot_im=im0)
 
         return im0
 
@@ -168,17 +170,18 @@ class CustomObjectCounter(BaseObjectCounter):
         self.track_data = self.tracks[0].obb or self.tracks[0].boxes
 
         if self.track_data and self.track_data.id is not None:
-            self.boxes = self.track_data.xyxy.cpu()
-            self.clss = self.track_data.cls.cpu().tolist()
-            self.track_ids = self.track_data.id.int().cpu().tolist()
-            self.confidences = self.track_data.conf.cpu().tolist()
+            track_data = cast(Any, self.track_data)
+            self.boxes = track_data.xyxy.cpu()
+            self.clss = track_data.cls.cpu().tolist()
+            self.track_ids = track_data.id.int().cpu().tolist()
+            self.confidences = track_data.conf.cpu().tolist()
         else:
             self.boxes, self.clss, self.track_ids, self.confidences = [], [], [], []
 
     def store_extended_tracking_history(
         self,
         track_id: int,
-        box: List[float],
+        box: list[float],
         cls: int,
         conf: float,
     ) -> None:
@@ -216,9 +219,9 @@ class CustomObjectCounter(BaseObjectCounter):
 
     def detect_cross_events(
         self,
-        box: List[float],
+        box: list[float],
         track_id: int,
-        prev_position: Optional[Tuple[float, float]],
+        prev_position: tuple[float, float] | None,
         cls: int,
     ) -> None:
         """Queue a crossing event if the motion segment intersects the counting line.
@@ -230,7 +233,7 @@ class CustomObjectCounter(BaseObjectCounter):
             cls (int): Class index of the object.
         """
         if prev_position is None:
-            return None  # Cannot determine movement without previous position
+            return  # Cannot determine movement without previous position
 
         # Calculate the center of the bounding box for the current frame
         cur_x_center = (box[0] + box[2]) / 2.0
@@ -245,21 +248,19 @@ class CustomObjectCounter(BaseObjectCounter):
         )
 
         if not crossed_line:
-            return None  # No crossing detected
+            return  # No crossing detected
 
         # Store the event instead of counting immediately
-        self.pending_counts[track_id].append(
-            {
-                "frame": self.video_frame_count,
-                "global_frame": self.global_frame_count,
-                "position": (cur_x_center, cur_y_center),
-                "cls": cls,
-                "box": box,
-                "video_filename": self.video_filename,
-            }
-        )
+        self.pending_counts[track_id].append({
+            "frame": self.video_frame_count,
+            "global_frame": self.global_frame_count,
+            "position": (cur_x_center, cur_y_center),
+            "cls": cls,
+            "box": box,
+            "video_filename": self.video_filename,
+        })
 
-    def verify_and_finalize_counts(self, force_finalize: bool = False) -> None:  # noqa: FBT001, FBT002
+    def verify_and_finalize_counts(self, force_finalize: bool = False) -> None:
         """Processes pending crossing events and finalizes counts for disappeared or completed tracks.
 
         Args:
@@ -282,8 +283,8 @@ class CustomObjectCounter(BaseObjectCounter):
     def should_finalize_track(
         self,
         track_id: int,
-        events: List[Dict],
-        force_finalize: bool,  # noqa: FBT001
+        events: list[dict],
+        force_finalize: bool,
     ) -> bool:
         """Determines whether a track should be finalized.
 
@@ -319,7 +320,7 @@ class CustomObjectCounter(BaseObjectCounter):
 
         return (gone_too_long or counted_delay or force_finalize) and long_enough
 
-    def finalize_track(self, track_id: int, events: List[Dict]) -> None:
+    def finalize_track(self, track_id: int, events: list[dict]) -> None:
         """Finalizes a track and records IN/OUT events. Uses the latest crossing to decide IN vs OUT, and the track's origin to avoid double counts.
 
         Args:
@@ -339,13 +340,14 @@ class CustomObjectCounter(BaseObjectCounter):
         line_y = self.region[0][1]
         class_name = self.names[mode_label]
         from_above = self.origin_above.get(track_id, False)
+        classwise_counts = cast(Any, self).classwise_counts
 
         self.logger.debug(f"Track {track_id} current center Y: {cur_y_center}, line Y: {line_y}")
         if cur_y_center < line_y:  # IN event
             # Check if fish originated above the line
             if not from_above:  # Only count IN if it did NOT originate above
                 self.in_count += 1
-                self.classwise_counts[class_name]["IN"] += 1
+                classwise_counts[class_name]["IN"] += 1
                 self.save_catch_to_json(
                     track_id=track_id,
                     label=class_name,
@@ -360,7 +362,7 @@ class CustomObjectCounter(BaseObjectCounter):
             # If the fish originated below the line count it IN FIRST
             if not from_above:
                 self.in_count += 1
-                self.classwise_counts[class_name]["IN"] += 1
+                classwise_counts[class_name]["IN"] += 1
                 self.save_catch_to_json(
                     track_id=track_id,
                     label=class_name,
@@ -369,7 +371,7 @@ class CustomObjectCounter(BaseObjectCounter):
                 )
                 self.logger.info(f"Track {track_id} first counted as IN (originated below).")
             self.out_count += 1
-            self.classwise_counts[class_name]["OUT"] += 1
+            classwise_counts[class_name]["OUT"] += 1
             self.save_catch_to_json(
                 track_id=track_id,
                 label=class_name,
@@ -389,7 +391,7 @@ class CustomObjectCounter(BaseObjectCounter):
         self.track_history.pop(track_id, None)
         self.origin_above.pop(track_id, None)
 
-    def get_mode_label(self, track_id: int) -> Optional[int]:
+    def get_mode_label(self, track_id: int) -> int | None:
         """Returns the most frequent label for a given track ID.
 
         Args:

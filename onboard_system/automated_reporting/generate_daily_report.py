@@ -98,28 +98,24 @@ def process_json_files(
 
             global_frame = data["global_frame"]
 
-            catch_sequence.append(
-                {
-                    "label": label,
-                    "scientific_name": FISH_MAPPING.get(label, {}).get(
-                        "scientific_name", "Unknown"
-                    ),
-                    "name_en": FISH_MAPPING.get(label, {}).get("name_en", "Unknown"),
-                    "name_es": FISH_MAPPING.get(label, {}).get("name_es", "Unknown"),
-                    "illegal": bool(label in ILLEGAL_SPECIES),
-                    "event_type": event_type,
-                    "conf_score": avg_conf_score,
-                    "video_filename": video_filename,
-                    "frame_number": frame_number,
-                    "global_frame": global_frame,
-                    "estimated_catch_time": get_estimated_catch_time(data),
-                }
-            )
+            catch_sequence.append({
+                "label": label,
+                "scientific_name": FISH_MAPPING.get(label, {}).get("scientific_name", "Unknown"),
+                "name_en": FISH_MAPPING.get(label, {}).get("name_en", "Unknown"),
+                "name_es": FISH_MAPPING.get(label, {}).get("name_es", "Unknown"),
+                "illegal": bool(label in ILLEGAL_SPECIES),
+                "event_type": event_type,
+                "conf_score": avg_conf_score,
+                "video_filename": video_filename,
+                "frame_number": frame_number,
+                "global_frame": global_frame,
+                "estimated_catch_time": get_estimated_catch_time(data),
+            })
 
             file_count += 1
 
     # Sort catch sequence by global frame number
-    catch_sequence.sort(key=lambda x: x["global_frame"])
+    catch_sequence.sort(key=lambda x: x["global_frame"])  # ty: ignore[no-matching-overload]
 
     # Map events to RETAINED, VESSEL_DISCARD, or WATER_DISCARD
     catch_sequence = map_events(catch_sequence)
@@ -173,9 +169,30 @@ def process_json_files(
     logger.info(f"Processed {file_count} files. Report saved to {output_path}.")
 
 
+def _add_evidence_images(
+    catch_sequence: list[dict], report_path: str, use_dummy_data: bool
+) -> None:
+    """Add an encoded evidence image, when available, to each catch."""
+    if use_dummy_data:
+        for catch in catch_sequence:
+            catch["evidence_image"] = None
+        return
+
+    evidence_dir = os.path.join(report_path, "evidence_frames")
+    extract_evidence_frames(catch_sequence=catch_sequence, output_dir=evidence_dir)
+    for catch in catch_sequence:
+        evidence_filename = f"{catch['video_filename']}_frame_{catch['frame_number']}.jpg"
+        evidence_path = os.path.join(evidence_dir, evidence_filename)
+        if os.path.exists(evidence_path):
+            catch["evidence_image"] = encode_to_base64(evidence_path)
+        else:
+            logger.warning(f"File not found: {evidence_path}")
+            catch["evidence_image"] = None
+
+
 def generate_html_report(
     report_path: str,
-    use_dummy_data: bool = False,  # noqa: FBT001, FBT002
+    use_dummy_data: bool = False,
 ) -> None:
     """Render the daily HTML report using precomputed JSON + derived artifacts.
 
@@ -232,25 +249,8 @@ def generate_html_report(
         elog_catch_df=elog_catch_df,
         processed_video_list=processed_video_list,
     )
-    # Extract evidence frames
     if catch_sequence:
-        if use_dummy_data:
-            # When using dummy data, skip extraction and use play-circle.png as fallback
-            for catch in catch_sequence:
-                catch["evidence_image"] = None
-        else:
-            evidence_dir = os.path.join(report_path, "evidence_frames")
-            extract_evidence_frames(catch_sequence=catch_sequence, output_dir=evidence_dir)
-            for catch in catch_sequence:
-                video_filename_base = catch["video_filename"]
-                frame_number = catch["frame_number"]
-                evidence_filename = f"{video_filename_base}_frame_{frame_number}.jpg"
-                evidence_path = os.path.join(evidence_dir, evidence_filename)
-                if os.path.exists(evidence_path):
-                    catch["evidence_image"] = encode_to_base64(evidence_path)
-                else:
-                    logger.warning(f"File not found: {evidence_path}")
-                    catch["evidence_image"] = None
+        _add_evidence_images(catch_sequence, report_path, use_dummy_data)
 
     for catch in catch_sequence:
         label = catch["label"]

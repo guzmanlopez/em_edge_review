@@ -16,7 +16,7 @@ _OVER_MED = settings.ELOGS_OVERPREDICTION_MED_PERCENT / 100.0
 _UNDER_FLAG = settings.ELOGS_UNDERPREDICTION_FLAG_PERCENT / 100.0
 
 
-def calculate_risk_score_elogs(  # noqa: PLR0912
+def calculate_risk_score_elogs(
     counts_by_species: list,
     elog_catch_df: pd.DataFrame,
     risk_score_path: str,
@@ -67,16 +67,16 @@ def calculate_risk_score_elogs(  # noqa: PLR0912
             risk_score = 3
     elif catches_retained_model >= catches_elogs:  # Model predicts more than elogs
         over_ratio = (catches_retained_model - catches_elogs) / catches_elogs
-        if over_ratio <= _OVER_LOW:  # noqa: PLR2004
+        if over_ratio <= _OVER_LOW:
             risk_score = 1
-        elif over_ratio <= _OVER_MED:  # noqa: PLR2004
+        elif over_ratio <= _OVER_MED:
             risk_score = 2
         else:
             risk_score = 3
     else:  # Model predicts less than elogs
         risk_score = 1  # we assume the elogs are correct, as there is no motivation for the captains to overreport
         under_ratio = (catches_elogs - catches_retained_model) / catches_elogs
-        if under_ratio > _UNDER_FLAG:  # noqa: PLR2004
+        if under_ratio > _UNDER_FLAG:
             underprediction_flag = True
 
     catches_difference = abs(catches_retained_model - catches_elogs)

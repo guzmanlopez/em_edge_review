@@ -1,7 +1,6 @@
 import json
 import os
 from datetime import datetime, timedelta
-from typing import Dict, Union
 
 import pytz
 
@@ -28,9 +27,60 @@ def _percent(numerator: timedelta, denominator: timedelta) -> float:
     return round((numerator / denominator) * 100.0, 2)
 
 
-def calculate_operational_risk_score(  # noqa: PLR0912, PLR0915
+def _risk_from_coverage(total_time: timedelta, gaps_percentage: float) -> int:
+    """Return the risk score based on coverage duration and gap percentage."""
+    if total_time < OPERATIONAL_COVERAGE_MIN_DURATION:
+        return 3
+    if gaps_percentage > OPERATIONAL_GAPS_PERCENT_HIGH:
+        return 3
+    if gaps_percentage > OPERATIONAL_GAPS_PERCENT_LOW:
+        return 2
+    return 1
+
+
+def _calculate_video_coverage(video_list: list) -> tuple[int, list, timedelta, timedelta, float]:
+    """Calculate video coverage timing, gaps, and risk."""
+    if not video_list:
+        logger.info("No video data available.")
+        return 0, [], timedelta(), timedelta(), 0.0
+
+    video_time_gaps = find_gaps_in_list(data_list=video_list, data_source="video")
+    video_total_time = calculate_total_footage_time(video_list)
+    video_total_time_gaps = sum(video_time_gaps, timedelta())
+    video_gaps_percentage_over_total = _percent(video_total_time_gaps, video_total_time)
+    risk_video = _risk_from_coverage(video_total_time, video_gaps_percentage_over_total)
+    return (
+        risk_video,
+        video_time_gaps,
+        video_total_time,
+        video_total_time_gaps,
+        video_gaps_percentage_over_total,
+    )
+
+
+def _calculate_gps_coverage(gps_list: list) -> tuple[int, list, timedelta, timedelta, float]:
+    """Calculate GPS coverage timing, gaps, and risk."""
+    if not gps_list:
+        logger.info("No GPS data available.")
+        return 0, [], timedelta(), timedelta(), 0.0
+
+    gps_records_time_gaps = find_gaps_in_list(data_list=gps_list, data_source="gps")
+    gps_records_total_time = calculate_total_gps_records_time(gps_list)
+    gps_records_total_time_gaps = sum(gps_records_time_gaps, timedelta())
+    gps_gaps_percentage_over_total = _percent(gps_records_total_time_gaps, gps_records_total_time)
+    risk_gps = _risk_from_coverage(gps_records_total_time, gps_gaps_percentage_over_total)
+    return (
+        risk_gps,
+        gps_records_time_gaps,
+        gps_records_total_time,
+        gps_records_total_time_gaps,
+        gps_gaps_percentage_over_total,
+    )
+
+
+def calculate_operational_risk_score(
     video_list: list, gps_list: list, risk_score_path: str
-) -> Dict[str, Union[str, int, None]]:
+) -> dict[str, str | int | None]:
     """Calculates the operational risk score based on video and GPS coverage/gaps.
 
     Two risk scores are calculated: one for video and one for GPS. The video footage risk score is determined based on the total time of video footage and the proportion of time gaps in the video footage.
@@ -63,55 +113,20 @@ def calculate_operational_risk_score(  # noqa: PLR0912, PLR0915
             - gps_total_time_gaps: The total time gaps in GPS records.
             - gps_gaps_percentage_over_total: The percentage of time gaps in GPS records.
     """
-    # --- Video ---
-    if video_list:
-        video_time_gaps = find_gaps_in_list(data_list=video_list, data_source="video")
-        video_total_time = calculate_total_footage_time(video_list)
-        video_total_time_gaps = sum(video_time_gaps, timedelta())
-        video_gaps_percentage_over_total = _percent(video_total_time_gaps, video_total_time)
-
-        if video_total_time < OPERATIONAL_COVERAGE_MIN_DURATION:
-            risk_video = 3
-        else:  # noqa: PLR5501
-            if video_gaps_percentage_over_total > OPERATIONAL_GAPS_PERCENT_HIGH:
-                risk_video = 3
-            elif video_gaps_percentage_over_total > OPERATIONAL_GAPS_PERCENT_LOW:
-                risk_video = 2
-            else:
-                risk_video = 1
-    else:
-        logger.info("No video data available.")
-        risk_video = 0
-        video_time_gaps = []
-        video_total_time = timedelta()
-        video_total_time_gaps = timedelta()
-        video_gaps_percentage_over_total = 0.0
-
-    # --- GPS ---
-    if gps_list:
-        gps_records_time_gaps = find_gaps_in_list(data_list=gps_list, data_source="gps")
-        gps_records_total_time = calculate_total_gps_records_time(gps_list)
-        gps_records_total_time_gaps = sum(gps_records_time_gaps, timedelta())
-        gps_gaps_percentage_over_total = _percent(
-            gps_records_total_time_gaps, gps_records_total_time
-        )
-
-        if gps_records_total_time < OPERATIONAL_COVERAGE_MIN_DURATION:
-            risk_gps = 3
-        else:  # noqa: PLR5501
-            if gps_gaps_percentage_over_total > OPERATIONAL_GAPS_PERCENT_HIGH:
-                risk_gps = 3
-            elif gps_gaps_percentage_over_total > OPERATIONAL_GAPS_PERCENT_LOW:
-                risk_gps = 2
-            else:
-                risk_gps = 1
-    else:
-        logger.info("No GPS data available.")
-        risk_gps = 0
-        gps_records_time_gaps = []
-        gps_records_total_time = timedelta()
-        gps_records_total_time_gaps = timedelta()
-        gps_gaps_percentage_over_total = 0.0
+    (
+        risk_video,
+        video_time_gaps,
+        video_total_time,
+        video_total_time_gaps,
+        video_gaps_percentage_over_total,
+    ) = _calculate_video_coverage(video_list)
+    (
+        risk_gps,
+        gps_records_time_gaps,
+        gps_records_total_time,
+        gps_records_total_time_gaps,
+        gps_gaps_percentage_over_total,
+    ) = _calculate_gps_coverage(gps_list)
 
     today_date = datetime.now(LOCAL_TZ).strftime("%Y-%m-%d")
 

@@ -1,0 +1,64 @@
+# If you make changes to this file, you should run `uv run pre-commit install` to update the hooks
+# Remember to update the version of the ruff-pre-commit repo when you update Ruff
+repos:
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.11.28
+    hooks:
+      # Check uv.lock is up to date.
+      - id: uv-lock
+  - repo: https://github.com/astral-sh/ruff-pre-commit  
+    rev: v0.15.21
+    hooks:
+      # Run the linter.
+      - id: ruff-check
+        args: [ --fix, --line-length=100 ]
+      # Run the formatter.
+      - id: ruff-format
+        args: [ --line-length=100 ]
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+        args: [ --maxkb=5120 ]
+      - id: check-json
+        types: [json]
+        exclude: ^\.vscode/.*$ # Ignore .vscode folder which uses JSONC.
+      - id: check-toml
+        types: [toml]
+      - id: check-yaml
+        types: [yaml]
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: [ --baseline, .secrets.baseline ]
+        exclude: >-
+          (?x)^(
+              \.env.*\.example|
+              \.env.*\.sample
+          )$
+  - repo: https://github.com/rohaquinlop/complexipy-pre-commit
+    rev: v7.0.1
+    hooks:
+      - id: complexipy
+        args: [ --max-complexity-allowed=20, --suggest-refactors, --failed]
+  - repo: local
+    hooks:
+      - id: ty
+        name: Type check
+        entry: uv run ty check
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: docstr-coverage
+        name: Check docstring coverage
+        entry: uv run docstr-coverage onboard_system fish_detector_model logger.py --exclude '.*/tests/.*' --fail-under 75 --verbose=2 --skip-file-doc --skip-init
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: pytest-all
+        name: Run full test suite
+        entry: uv run pytest
+        language: system
+        pass_filenames: false
+        always_run: true
