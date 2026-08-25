@@ -1,0 +1,6 @@
+# For all validation settings, see https://docs.ultralytics.com/modes/val/#arguments-for-yolo-model-validation
+project: "Segmentation_evaluation_results"
+conf: 0.01
+split: "test"
+save_json: true
+plots: true

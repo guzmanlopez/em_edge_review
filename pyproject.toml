@@ -54,7 +54,12 @@ markers = [
 convention = "google"
 
 [tool.complexipy]
-paths = ["onboard_system", "fish_detector_model", "logger.py"]
+paths = [
+    "onboard_system",
+    "fish_detector_model",
+    "fish_segmentation_model",
+    "logger.py",
+]
 max-complexity-allowed = 20
 snapshot-create = false
 snapshot-ignore = false

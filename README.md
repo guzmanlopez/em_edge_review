@@ -45,11 +45,14 @@ This folder contains instructions and scripts for installing [CVAT](https://www.
 > 📘 See `cvat/README.md` for installation and usage instructions
 
 
-### `fish_detector_model/` – Fish detector training pipeline
+### Two fish model training pipelines
 
-This directory contains all necessary scripts and configuration files to **fine-tune and evaluate a fish detection model** using your own annotated dataset. It includes a baseline model (`baseline_fish_detector.pt`) and guidance on customizing for your fishery.
+This repository provides two distinct computer-vision model workflows:
 
-> 📘 See `fish_detector_model/README.md` for detailed training instructions
+- **`fish_detector_model/` - Object detection:** predicts a bounding box and class for each fish. It includes a pilot baseline model and scripts to fine-tune and evaluate it. See `fish_detector_model/README.md`.
+- **`fish_segmentation_model/` - Instance segmentation:** predicts a class and pixel-level mask for each fish using YOLO26 segmentation. It includes scripts to train, evaluate, and predict on images or videos. See `fish_segmentation_model/README.md`.
+
+The segmentation workflow is currently model-development tooling only. It is not connected to the code under `onboard_system/`.
 
 ### `onboard_system/ai_powered_system/fish_tracker_and_counter/` – Fish Tracking & Counting
 
