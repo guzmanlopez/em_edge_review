@@ -4,6 +4,8 @@ from datetime import UTC, datetime
 import yaml
 from ultralytics import YOLO
 
+from logger import get_logger
+
 
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
@@ -31,16 +33,20 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     """Evaluate a YOLO26 instance segmentation model."""
+    logger = get_logger(__name__)
     args = parse_args()
 
     with open(args.config) as config_file:
         cfg = yaml.safe_load(config_file)
 
+    logger.info("[fish] Loading segmentation model: %s", args.model_path)
     model = YOLO(args.model_path)
     cfg["data"] = args.data
     cfg["name"] = datetime.now(UTC).strftime("date_%Y%m%d_%H%M%S")
 
+    logger.info("[chart] Evaluating segmentation model with dataset: %s", args.data)
     model.val(**cfg)
+    logger.info("[check] Segmentation evaluation completed")
 
 
 if __name__ == "__main__":

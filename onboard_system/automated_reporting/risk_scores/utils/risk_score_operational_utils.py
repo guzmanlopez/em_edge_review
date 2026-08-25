@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 
+import pytz
+
 from logger import get_logger
 from onboard_system.automated_reporting import settings
 
@@ -8,6 +10,7 @@ EXPECTED_VIDEO_LENGTH = settings.EXPECTED_VIDEO_LENGTH
 EXPECTED_RECORD_INTERVAL = settings.EXPECTED_RECORD_INTERVAL
 
 logger = get_logger(__name__)
+LOCAL_TZ = pytz.timezone(settings.LOCAL_TZ_NAME)
 
 
 def get_todays_videos_from_server() -> list[str]:
@@ -33,7 +36,7 @@ def extract_timestamp_from_video_filename(filename: str) -> datetime | None:
         return None
 
     try:
-        return datetime.strptime(parts[2], "%Y%m%d-%H%M%S")
+        return datetime.strptime(parts[2], "%Y%m%d-%H%M%S").replace(tzinfo=LOCAL_TZ)
     except ValueError:
         logger.exception("Invalid video filename format: %s", filename)
         return None
@@ -52,7 +55,9 @@ def extract_timestamp_from_gps_filename(filename: str) -> datetime | None:
     try:
         date_part = parts[1]
         time_part = parts[2].split(".")[0] + "00"
-        return datetime.strptime(f"{date_part}-{time_part}", "%Y%m%d-%H%M%S")
+        return datetime.strptime(f"{date_part}-{time_part}", "%Y%m%d-%H%M%S").replace(
+            tzinfo=LOCAL_TZ
+        )
     except ValueError:
         logger.exception("Invalid GPS filename format: %s", filename)
         return None

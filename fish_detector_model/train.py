@@ -1,6 +1,6 @@
 import argparse
 import os
-from datetime import datetime
+from datetime import UTC, datetime
 
 import mlflow
 import yaml
@@ -37,7 +37,6 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     """Main function to train the YOLO model with custom settings."""
     logger = get_logger(__name__)
-
     args = parse_args()
     load_dotenv(override=True)
 
@@ -54,13 +53,16 @@ def main() -> None:
     else:
         settings.update({"mlflow": False})
 
+    logger.info("[fish] Loading detection model: %s", cfg["model"])
     model = YOLO(cfg["model"])
 
     cfg.pop("model")
     cfg["data"] = args.data
-    cfg["name"] = datetime.now().strftime("date_%Y%m%d_%H%M%S")
+    cfg["name"] = datetime.now(UTC).strftime("date_%Y%m%d_%H%M%S")
 
+    logger.info("[rocket] Starting detection training with dataset: %s", args.data)
     model.train(**cfg)
+    logger.info("[check] Detection training completed")
 
 
 if __name__ == "__main__":

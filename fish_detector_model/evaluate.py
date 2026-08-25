@@ -1,8 +1,10 @@
 import argparse
-from datetime import datetime
+from datetime import UTC, datetime
 
 import yaml
 from ultralytics import YOLO
+
+from logger import get_logger
 
 
 def parse_args() -> argparse.Namespace:
@@ -30,17 +32,21 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     """Main function to evaluate the YOLO model with custom settings."""
+    logger = get_logger(__name__)
     args = parse_args()
 
     with open(args.config) as f:
         cfg = yaml.safe_load(f)
 
+    logger.info("[fish] Loading detection model: %s", args.model_path)
     model = YOLO(args.model_path)
 
     cfg["data"] = args.data
-    cfg["name"] = datetime.now().strftime("date_%Y%m%d_%H%M%S")
+    cfg["name"] = datetime.now(UTC).strftime("date_%Y%m%d_%H%M%S")
 
+    logger.info("[chart] Evaluating detection model with dataset: %s", args.data)
     model.val(**cfg)
+    logger.info("[check] Detection evaluation completed")
 
 
 if __name__ == "__main__":

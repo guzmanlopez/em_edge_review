@@ -2,15 +2,16 @@
 
 import logging
 import os
-import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+from rich.console import Console
+from rich.logging import RichHandler
+
 LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
 
-UTC = UTC
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter("%(message)s")
+handler = RichHandler(console=Console(), rich_tracebacks=True)
 handler.setFormatter(formatter)
 handler.setLevel(LEVEL)
 
@@ -27,7 +28,7 @@ def get_logger(file_path: str, level: str | None = None) -> logging.Logger:
     name = Path(file_path).stem
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
-    if not any(isinstance(h, logging.StreamHandler) for h in logger.handlers):
+    if not logger.handlers:
         logger.addHandler(handler)
         if level == "DEBUG":
             # Ensure the log directory exists

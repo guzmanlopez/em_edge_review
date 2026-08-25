@@ -115,14 +115,14 @@ def calculate_operational_risk_score(
     """
     (
         risk_video,
-        video_time_gaps,
+        _video_time_gaps,
         video_total_time,
         video_total_time_gaps,
         video_gaps_percentage_over_total,
     ) = _calculate_video_coverage(video_list)
     (
         risk_gps,
-        gps_records_time_gaps,
+        _gps_records_time_gaps,
         gps_records_total_time,
         gps_records_total_time_gaps,
         gps_gaps_percentage_over_total,

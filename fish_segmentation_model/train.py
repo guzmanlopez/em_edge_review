@@ -51,11 +51,15 @@ def main() -> None:
     else:
         settings.update({"mlflow": False})
 
-    model = YOLO(cfg.pop("model"))
+    model_path = cfg.pop("model")
+    logger.info("[fish] Loading segmentation model: %s", model_path)
+    model = YOLO(model_path)
     cfg["data"] = args.data
     cfg["name"] = datetime.now(UTC).strftime("date_%Y%m%d_%H%M%S")
 
+    logger.info("[rocket] Starting segmentation training with dataset: %s", args.data)
     model.train(**cfg)
+    logger.info("[check] Segmentation training completed")
 
 
 if __name__ == "__main__":

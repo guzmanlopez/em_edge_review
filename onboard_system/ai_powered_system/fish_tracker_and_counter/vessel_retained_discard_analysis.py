@@ -113,7 +113,7 @@ def count_fish_in_video(
         logger.info(f"Saving video to: {output_video_path}")
         video_writer = cv2.VideoWriter(
             output_video_path,
-            getattr(cv2, "VideoWriter_fourcc")(*"mp4v"),
+            cv2.VideoWriter.fourcc(*"mp4v"),
             fps,
             (frame_width, frame_height),
         )

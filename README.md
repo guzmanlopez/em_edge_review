@@ -54,6 +54,16 @@ This repository provides two distinct computer-vision model workflows:
 
 The segmentation workflow is currently model-development tooling only. It is not connected to the code under `onboard_system/`.
 
+Run either workflow from the repository root. Any remaining options are passed to the selected command:
+
+```bash
+uv run main.py detection train --data /path/to/data.yaml
+uv run main.py detection evaluate --data /path/to/data.yaml
+uv run main.py segmentation train --data /path/to/data.yaml
+uv run main.py segmentation evaluate --data /path/to/data.yaml
+uv run main.py segmentation predict --source /path/to/video.mp4
+```
+
 ### `onboard_system/ai_powered_system/fish_tracker_and_counter/` – Fish Tracking & Counting
 
 This directory provides code to **track, classify, and count fish** in EM footage using a trained fish detector.
