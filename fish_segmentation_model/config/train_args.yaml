@@ -1,24 +1,32 @@
 # For all training settings, see https://docs.ultralytics.com/modes/train/#train-settings
 model: "fish_segmentation_model/baseline_model/yolo26l-seg.pt"
 pretrained: true
+classes: [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11]
 
 imgsz: 640
-batch: 16
+batch: 8
 epochs: 300
 patience: 60
 optimizer: "MuSGD"
 cos_lr: true
 
-degrees: 0.0
+degrees: 5.0
 shear: 0.0
-scale: 0.5
+scale: 0.3
 perspective: 0.0
 translate: 0.1
 fliplr: 0.5
+hsv_h: 0.01
+hsv_s: 0.4
+hsv_v: 0.3
+mosaic: 0.5
+close_mosaic: 20
+mixup: 0.0
+copy_paste: 0.0
 
 overlap_mask: true
 mask_ratio: 4
 
-device: "0,1"
-project: "Finetune_fish_segmentation"
+device: 0
+project: "runs/segment/finetune_fish_segmentation"
 plots: true

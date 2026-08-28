@@ -1,6 +1,7 @@
 import argparse
 import os
 from datetime import UTC, datetime
+from pathlib import Path
 
 import mlflow
 import yaml
@@ -54,11 +55,17 @@ def main() -> None:
     model_path = cfg.pop("model")
     logger.info("[fish] Loading segmentation model: %s", model_path)
     model = YOLO(model_path)
+    if "project" in cfg and not os.path.isabs(cfg["project"]):
+        cfg["project"] = str(Path(__file__).resolve().parents[1] / cfg["project"])
     cfg["data"] = args.data
     cfg["name"] = datetime.now(UTC).strftime("date_%Y%m%d_%H%M%S")
 
     logger.info("[rocket] Starting segmentation training with dataset: %s", args.data)
-    model.train(**cfg)
+    try:
+        model.train(**cfg)
+    except KeyboardInterrupt:
+        logger.info("[stop] Segmentation training interrupted by user")
+        return
     logger.info("[check] Segmentation training completed")
 
 

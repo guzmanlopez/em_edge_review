@@ -158,7 +158,16 @@ data
 
 # Ignore all directories created by ultralytics
 Finetune_fish_detector/
+runs/
+mlartifacts/
+mlflow.db
 Evaluation Results/
 
 # Ignore test outputs
 tests/dummy_data/fish_tracker_and_counter/output
+
+# Ignore all model weights
+*.pt
+
+# Ignore all runs created by ultralytics
+runs/

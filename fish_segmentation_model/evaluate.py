@@ -1,10 +1,18 @@
 import argparse
+from collections.abc import Mapping
 from datetime import UTC, datetime
 
 import yaml
 from ultralytics import YOLO
 
 from logger import get_logger
+
+SEGMENTATION_METRIC_KEYS = (
+    "metrics/precision(M)",
+    "metrics/recall(M)",
+    "metrics/mAP50(M)",
+    "metrics/mAP50-95(M)",
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -45,7 +53,12 @@ def main() -> None:
     cfg["name"] = datetime.now(UTC).strftime("date_%Y%m%d_%H%M%S")
 
     logger.info("[chart] Evaluating segmentation model with dataset: %s", args.data)
-    model.val(**cfg)
+    results = model.val(**cfg)
+    metrics = getattr(results, "results_dict", {})
+    if isinstance(metrics, Mapping):
+        for metric_name in SEGMENTATION_METRIC_KEYS:
+            if metric_name in metrics:
+                logger.info("[metrics] %s: %.4f", metric_name, metrics[metric_name])
     logger.info("[check] Segmentation evaluation completed")
 
 
