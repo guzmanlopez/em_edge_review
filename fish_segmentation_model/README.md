@@ -44,6 +44,8 @@ uv run fish_segmentation_model/evaluate.py \
 ```
 
 Evaluation uses the test split and reports both box and mask metrics.
+It writes per-class mask metrics to `results_test.csv` and aggregate metrics to
+`results_test_summary.csv` inside the evaluation run directory.
 
 ## Predict
 
@@ -53,4 +55,16 @@ uv run fish_segmentation_model/predict.py \
   --model-path /path/to/best.pt
 ```
 
-Predictions and polygon labels are written under `Segmentation_prediction_results/`. Settings for each operation are in `fish_segmentation_model/config/`.
+## Output Directories
+
+Generated segmentation outputs are organized by workflow:
+
+```text
+runs/segment/
+  train/<timestamp>/
+  evaluate/<timestamp>/
+  predict/<timestamp>/
+```
+
+Predictions and polygon labels are written under `runs/segment/predict/`.
+Settings for each operation are in `fish_segmentation_model/config/`.

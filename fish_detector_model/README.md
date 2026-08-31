@@ -66,6 +66,16 @@ uv run fish_detector_model/evaluate.py \
     --conf path/to/your/custom_config.yaml
   ```
 
+## Output Directories
+
+Generated detector outputs are organized by workflow:
+
+```text
+runs/detect/
+  train/<timestamp>/
+  evaluate/<timestamp>/
+```
+
 
 ## 📁 Configuration Files
 

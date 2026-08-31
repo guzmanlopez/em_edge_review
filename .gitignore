@@ -156,13 +156,6 @@ data
 # complexipy cache
 .complexipy_cache/
 
-# Ignore all directories created by ultralytics
-Finetune_fish_detector/
-runs/
-mlartifacts/
-mlflow.db
-Evaluation Results/
-
 # Ignore test outputs
 tests/dummy_data/fish_tracker_and_counter/output
 
@@ -171,3 +164,7 @@ tests/dummy_data/fish_tracker_and_counter/output
 
 # Ignore all runs created by ultralytics
 runs/
+
+# Ignore all mlflow artifacts and database
+mlartifacts/
+mlflow.db

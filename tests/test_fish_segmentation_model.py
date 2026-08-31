@@ -69,9 +69,11 @@ def test_evaluate_routes_data_to_ultralytics(monkeypatch, tmp_path) -> None:
 
     evaluate.main()
 
-    yolo.assert_called_once_with("best.pt")
+    yolo.assert_called_once_with(str(Path(evaluate.__file__).resolve().parents[1] / "best.pt"))
     model.val.assert_called_once()
-    assert model.val.call_args.kwargs["data"] == "fish.yaml"
+    assert model.val.call_args.kwargs["data"] == str(
+        Path(evaluate.__file__).resolve().parents[1] / "fish.yaml"
+    )
     assert model.val.call_args.kwargs["split"] == "test"
 
 
@@ -85,6 +87,10 @@ def test_evaluate_logs_standard_mask_metrics(monkeypatch, tmp_path) -> None:
         "metrics/mAP50(M)": 0.6,
         "metrics/mAP50-95(M)": 0.5,
     }
+    model.val.return_value.names = {0: "fish"}
+    model.val.return_value.class_result.return_value = [0.8, 0.7, 0.6, 0.5, 0.8, 0.7, 0.6, 0.5]
+    model.val.return_value.save_dir = tmp_path / "evaluate"
+    model.val.return_value.save_dir.mkdir()
     monkeypatch.setattr(evaluate, "YOLO", Mock(return_value=model))
     monkeypatch.setattr(evaluate, "get_logger", Mock(return_value=logger))
     monkeypatch.setattr(
@@ -97,6 +103,63 @@ def test_evaluate_logs_standard_mask_metrics(monkeypatch, tmp_path) -> None:
 
     for metric_name, value in model.val.return_value.results_dict.items():
         logger.info.assert_any_call("[metrics] %s: %.4f", metric_name, value)
+
+
+def test_evaluate_saves_test_results_to_run_directory(monkeypatch, tmp_path) -> None:
+    config_path = write_config(tmp_path, {"split": "test"})
+    run_dir = tmp_path / "run"
+    model_path = run_dir / "weights" / "best.pt"
+    model_path.parent.mkdir(parents=True)
+    model_path.touch()
+    model = Mock()
+    model.val.return_value.results_dict = {"metrics/mAP50(M)": 0.6, "fitness": 0.5}
+    model.val.return_value.save_dir = run_dir / "evaluate"
+    model.val.return_value.save_dir.mkdir()
+    model.val.return_value.names = {0: "fish"}
+    model.val.return_value.class_result.return_value = [0.8, 0.7, 0.6, 0.5, 0.8, 0.7, 0.6, 0.5]
+    monkeypatch.setattr(evaluate, "YOLO", Mock(return_value=model))
+    monkeypatch.setattr(
+        evaluate,
+        "parse_args",
+        lambda: Namespace(config=config_path, data="fish.yaml", model_path=str(model_path)),
+    )
+
+    evaluate.main()
+
+    assert model.val.call_args.kwargs["name"] == "run"
+    assert (run_dir / "evaluate" / "results_test_summary.csv").read_text() == (
+        "metric,value\nmetrics/mAP50(M),0.6\nfitness,0.5\n"
+    )
+    assert (run_dir / "evaluate" / "results_test.csv").read_text() == (
+        "class,metrics/precision(M),metrics/recall(M),metrics/mAP50(M),metrics/mAP50-95(M)\n"
+        "fish,0.8,0.7,0.6,0.5\n"
+    )
+
+
+def test_evaluate_saves_empty_metrics_for_unrepresented_class(monkeypatch, tmp_path) -> None:
+    config_path = write_config(tmp_path, {})
+    run_dir = tmp_path / "run"
+    model_path = run_dir / "weights" / "best.pt"
+    model_path.parent.mkdir(parents=True)
+    model = Mock()
+    model.val.return_value.results_dict = {"fitness": 0.5}
+    model.val.return_value.save_dir = run_dir / "evaluate"
+    model.val.return_value.save_dir.mkdir()
+    model.val.return_value.names = {0: "fish", 1: "shark"}
+    model.val.return_value.class_result.side_effect = [
+        [0.8, 0.7, 0.6, 0.5, 0.8, 0.7, 0.6, 0.5],
+        IndexError,
+    ]
+    monkeypatch.setattr(evaluate, "YOLO", Mock(return_value=model))
+    monkeypatch.setattr(
+        evaluate,
+        "parse_args",
+        lambda: Namespace(config=config_path, data="fish.yaml", model_path=str(model_path)),
+    )
+
+    evaluate.main()
+
+    assert "shark,,,," in (run_dir / "evaluate" / "results_test.csv").read_text()
 
 
 def test_predict_routes_source_to_ultralytics(monkeypatch, tmp_path) -> None:

@@ -35,5 +35,5 @@ dropout: 0.228
 device: "0,1"
 
 # Logging and experiment tracking
-project: "Finetune_fish_detector"
+project: "runs/detect/train"
 plots: true

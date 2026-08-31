@@ -28,5 +28,5 @@ overlap_mask: true
 mask_ratio: 4
 
 device: 0
-project: "runs/segment/finetune_fish_segmentation"
+project: "runs/segment/train"
 plots: true

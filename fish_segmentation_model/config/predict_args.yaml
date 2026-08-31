@@ -1,5 +1,5 @@
 # For all prediction settings, see https://docs.ultralytics.com/modes/predict/#inference-arguments
-project: "Segmentation_prediction_results"
+project: "runs/segment/predict"
 conf: 0.25
 save: true
 save_txt: true
